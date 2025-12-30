@@ -1,10 +1,17 @@
-<div align="center">
+import os
+
+def create_readme():
+    print("📝 TRION CORE: README.md dosyası hazırlanıyor...")
+    
+    # Tüm içeriği tek bir raw string (r"...") içine alıyoruz.
+    # Böylece Python hiçbir özel karakteri (ters taksim, tırnak vs.) karıştırmaz.
+    
+    content = r"""<div align="center">
 
 # 💠 TRION CORE
 ### The 1.58-bit High-Performance LLM Engine
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.9%2B-green.svg)](https://www.python.org/)
 [![Engine](https://img.shields.io/badge/engine-1.58--bit-magenta.svg)](qkv_core/)
 
 *Ultra-düşük bellek kullanımı, yüksek hız ve matematiksel zeka.*
@@ -32,16 +39,16 @@ Trion Core, ağırlıkları sıkıştırmak için **Absmean Quantization** tekni
 ### 1. Kuantizasyon Formülü
 Ağırlık matrisi $W$ için ölçekleme faktörü $\gamma$ ve kuantize ağırlık $W_{quant}$ şöyle hesaplanır:
 
-$$\gamma = \frac{1}{nm} \sum_{ij} |W_{ij}|$$
+$$ \gamma = \frac{1}{nm} \sum_{ij} |W_{ij}| $$
 
-$$W_{quant} = \text{Clip}\left(\text{Round}\left(\frac{W}{\gamma}\right), -1, 1\right)$$
+$$ W_{quant} = \text{Clip}\left(\text{Round}\left(\frac{W}{\gamma}\right), -1, 1\right) $$
 
-Sonuç olarak $W_{quant}$ matrisi sadece $\\{-1, 0, +1\\}$ değerlerini içerir.
+Sonuç olarak $W_{quant}$ matrisi sadece $\{-1, 0, +1\}$ değerlerini içerir.
 
 ### 2. İleri Besleme (Forward Pass)
 Aktivasyonlar $X$, 8-bit hassasiyetine ölçeklenir:
 
-$$Y = (W_{quant} \times X_{quant}) \times \frac{\gamma \beta}{Q_b}$$
+$$ Y = (W_{quant} \times X_{quant}) \times \frac{\gamma \beta}{Q_b} $$
 
 Burada işlem, ağır matris çarpımı yerine **Sparse Addition** (Seyrek Toplama) işlemine dönüşür.
 
@@ -49,7 +56,7 @@ Burada işlem, ağır matris çarpımı yerine **Sparse Addition** (Seyrek Topla
 
 ## 🏗️ Sistem Mimarisi
 
-Trion Core veri akış şeması (GitHub Mermaid Entegrasyonu):
+Trion Core veri akış şeması (Mermaid):
 
 ```mermaid
 graph TD

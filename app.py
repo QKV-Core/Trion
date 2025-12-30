@@ -5,36 +5,55 @@ import torch.optim as optim
 import time
 import os
 import sys
-# Transformers kütüphanesinden gerekli parçalar
+
+# --- GEREKSİNİMLER ---
 try:
     from transformers import GPT2Tokenizer
-except ImportError:
-    st.error("Lütfen 'pip install transformers' komutunu çalıştırın.")
-    st.stop()
-
-# --- IMPORTLAR ---
-try:
-    from qkv_core.modeling import QKVModel, QKVConfig
+    from trion_core.modeling import QKVModel, QKVConfig
+    # CUDA Kontrolü
     try:
-        from qkv_core.engine import attention_cuda
+        from trion_core.engine import attention_cuda
         CUDA_AVAILABLE = True
     except ImportError:
         CUDA_AVAILABLE = False
 except ImportError as e:
-    st.error(f"⚠️ Kritik Hata: {e}")
+    st.error(f"Sistem Hatası: {e}")
+    st.info("Lütfen 'pip install transformers' kurduğundan emin ol.")
     st.stop()
 
-# --- SAYFA YAPILANDIRMASI ---
-st.set_page_config(page_title="QKV Core (GPT-2 Edition)", page_icon="🧠", layout="wide")
+# --- TRION ARAYÜZ AYARLARI ---
+st.set_page_config(
+    page_title="TRION CORE v1.0",
+    page_icon="💠",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# --- CSS ---
+# --- CSS (Trion Teması: Cyan & Dark Grey) ---
 st.markdown("""
 <style>
-    .stApp { background-color: #121212; color: #e0e0e0; }
-    .stTextInput > div > div > input { background-color: #2d2d2d; color: #fff; border: 1px solid #444; }
-    section[data-testid="stSidebar"] { background-color: #1e1e1e; }
-    .stButton > button { background-color: #0d47a1; color: white; border: none; width: 100%; }
-    .stButton > button:hover { background-color: #1565c0; }
+    .stApp { background-color: #0e1117; color: #cfd8dc; }
+    
+    /* Yan Menü */
+    section[data-testid="stSidebar"] { background-color: #171c26; border-right: 1px solid #2d3748; }
+    
+    /* Başlıklar */
+    h1, h2, h3 { color: #00bcd4; font-family: 'Helvetica Neue', sans-serif; }
+    
+    /* Inputlar */
+    .stTextInput > div > div > input { 
+        background-color: #232b3b; color: #00bcd4; border: 1px solid #455a64; 
+    }
+    
+    /* Butonlar */
+    .stButton > button { 
+        background-color: #00bcd4; color: #000; font-weight: bold; border: none; 
+        transition: 0.3s;
+    }
+    .stButton > button:hover { background-color: #00e5ff; box-shadow: 0 0 10px #00bcd4; }
+    
+    /* Progress Bar */
+    .stProgress > div > div > div > div { background-color: #00bcd4; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -42,73 +61,73 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # --- KAYNAK YÜKLEYİCİ ---
 @st.cache_resource
-def load_resources():
-    # 1. GPT-2 TOKENIZER
+def load_trion_system():
+    # 1. SÖZLÜK (GPT-2)
     try:
-        # Hata vermemesi için model_max_length'i çok yüksek tutuyoruz
         tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-        tokenizer.model_max_length = 1000000 # Limit Bypass
-    except Exception as e:
-        st.error(f"Tokenizer hatası: {e}")
+        tokenizer.model_max_length = 1000000 # Limit Kaldırma
+    except:
+        st.error("Tokenizer yüklenemedi. İnternet bağlantını kontrol et.")
         st.stop()
-    
-    # 2. MODEL YAPILANDIRMASI (GPT-2 Small)
+        
+    # 2. TRION MODELİ
     config = QKVConfig(
-        vocab_size=50257,  
-        d_model=768,       
-        n_layer=12,        
-        n_head=12,         
+        vocab_size=50257,
+        d_model=768,
+        n_layer=12,
+        n_head=12,
         max_seq_len=1024,
         attn_threshold=-0.1 
     )
     model = QKVModel(config).to(device)
     
-    status = "🆕 BOŞ (GPT-2 Bekleniyor)"
+    status = "⚠️ ÇEKİRDEK BOŞ"
     
-    # 3. BEYİN YÜKLEME
-    if os.path.exists("ghost_brain.pt"):
+    # 3. TRION BEYNİNİ YÜKLE
+    if os.path.exists("trion_brain.pt"):
         try:
-            state_dict = torch.load("ghost_brain.pt", map_location=device)
+            state_dict = torch.load("trion_brain.pt", map_location=device)
             model.load_state_dict(state_dict)
-            status = "🧠 GPT-2 1.58b (Aktif)"
+            status = "💠 TRION ONLINE"
         except Exception as e:
-            status = "⚠️ Model Uyumsuz"
-            st.warning("Model dosyası uyumsuz, lütfen convert işlemini tekrar yapın.")
-            
+            status = f"❌ UYUMSUZ VERİ: {e}"
+    
     return tokenizer, model, status
 
-tokenizer, model, status_msg = load_resources()
+tokenizer, model, status_msg = load_trion_system()
 
 # --- YAN MENÜ ---
-st.sidebar.title("🎛️ QKV (GPT-2 CORE)")
-st.sidebar.caption(f"Durum: {status_msg}")
-st.sidebar.metric("Motor", "1.58-BIT HYBRID" if CUDA_AVAILABLE else "PYTHON MODE")
+st.sidebar.title("💠 TRION CORE")
+st.sidebar.caption(f"Sistem Durumu: {status_msg}")
+st.sidebar.markdown("---")
 
-st.sidebar.header("🔪 Cerrahi Ayarlar")
-current_thresh = st.sidebar.slider("Sparsity Threshold", -2.0, 2.0, -0.1, 0.1)
-model.config.attn_threshold = current_thresh
+c1, c2 = st.sidebar.columns(2)
+c1.metric("Birim", device.upper())
+c2.metric("Mimari", "1.58-BIT")
 
-st.sidebar.header("🌊 Üretim")
-temp = st.sidebar.slider("Temperature", 0.1, 2.0, 0.6)
-max_len = st.sidebar.slider("Uzunluk", 50, 500, 100)
+st.sidebar.subheader("🎛️ İnce Ayar")
+curr_thresh = st.sidebar.slider("Sparsity (Seyreklik)", -1.0, 1.0, -0.1, 0.05)
+model.config.attn_threshold = curr_thresh
 
-# --- ANA EKRAN ---
-tab_chat, tab_train = st.tabs(["💬 SOHBET", "🎓 İNCE AYAR (Fine-Tuning)"])
+st.sidebar.subheader("🌊 Üretim")
+temp = st.sidebar.slider("Temperature", 0.1, 2.0, 0.4) # Varsayılan: Düşük (Stabil)
+max_len = st.sidebar.slider("Token Limiti", 50, 500, 150)
 
-# ==========================================
-# SEKME 1: SOHBET
-# ==========================================
-with tab_chat:
-    st.subheader("🤖 QKV x GPT-2 Interface")
+# --- ANA SEKMELER ---
+tabs = st.tabs(["💬 TRION CHAT", "🎓 TRION LAB (Eğitim)"])
+
+# ----------------- CHAT SEKMEKİ -----------------
+with tabs[0]:
+    st.subheader("Neural Interface")
     
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Sistem hazır. Veri yükleyip eğitebilirsin."}]
+        st.session_state.messages = [{"role": "assistant", "content": "Trion Core sistemi hazır. Veri girişi bekleniyor."}]
 
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    if prompt := st.chat_input("Mesaj yaz..."):
+    if prompt := st.chat_input("Komut girin..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -120,18 +139,16 @@ with tab_chat:
             model.eval()
             if CUDA_AVAILABLE and device == 'cuda': model.half()
             
-            # Context Window Koruması
             try:
+                # Token Limit Koruması
                 tokens = tokenizer.encode(prompt)
-                # Eğer girdi çok uzunsa son 100 tokenı al
-                if len(tokens) > 100: tokens = tokens[-100:]
+                if len(tokens) > 200: tokens = tokens[-200:]
+                
                 idx = torch.tensor(tokens, dtype=torch.long, device=device).unsqueeze(0)
                 
                 with torch.no_grad():
                     for i in range(max_len):
-                        # GPT-2 limiti 1024, taşmamak için son 1000'i al
-                        cond_idx = idx[:, -1000:] 
-                        
+                        cond_idx = idx[:, -1000:]
                         logits = model(cond_idx)
                         next_logits = logits[:, -1, :]
                         
@@ -139,67 +156,57 @@ with tab_chat:
                         next_token = torch.multinomial(probs, 1)
                         idx = torch.cat((idx, next_token), dim=1)
                         
-                        token_id = next_token.item()
-                        word = tokenizer.decode([token_id])
-                        
+                        word = tokenizer.decode([next_token.item()])
                         full_res += word
                         res_box.markdown(full_res + "▌")
                 
                 res_box.markdown(full_res)
                 st.session_state.messages.append({"role": "assistant", "content": full_res})
+                
             except Exception as e:
-                st.error(f"Üretim hatası: {e}")
+                st.error(f"İşlem Hatası: {e}")
 
-# ==========================================
-# SEKME 2: EĞİTİM (Düzeltildi)
-# ==========================================
-with tab_train:
-    st.subheader("🎓 Lobotomi Rehabilitasyonu")
-    st.info("GPT-2'yi 1.58-bit'e sıkıştırdığımız için şu an 'sarhoş' gibi olabilir. Ona metin okutarak zekasını geri kazandırabilirsin.")
+# ----------------- EĞİTİM SEKMESİ -----------------
+with tabs[1]:
+    st.subheader("🎓 Trion Lab: Bilgi Yükleme")
+    st.info("Trion Core, matematiksel olarak dengelenmiştir. Veri yüklediğinizde çok hızlı öğrenir.")
     
-    uploaded_file = st.file_uploader("Eğitim Verisi (.txt)", type=["txt"])
+    uploaded_file = st.file_uploader("Metin Dosyası (.txt)", type=["txt"])
     
-    col1, col2 = st.columns(2)
-    steps = col1.number_input("Adım Sayısı", 10, 5000, 100)
-    lr_input = col2.number_input("Öğrenme Hızı", 1e-6, 1e-3, 1e-5, format="%.6f")
+    c1, c2, c3 = st.columns(3)
+    steps = c1.number_input("Adım (Steps)", 10, 10000, 200)
+    batch = c2.number_input("Batch Size", 2, 32, 4)
+    lr = c3.number_input("Öğrenme Hızı", 1e-6, 1e-2, 5e-5, format="%.6f")
     
-    if st.button("🔥 EĞİTİMİ BAŞLAT"):
+    if st.button("💠 EĞİTİMİ BAŞLAT", type="primary"):
         if uploaded_file:
+            text = uploaded_file.read().decode("utf-8")
+            st.success(f"Veri Alındı: {len(text)} karakter. İşleniyor...")
+            
+            # Tokenizer Limit Bypass
+            full_tokens = tokenizer.encode(text, truncation=False)
+            data = torch.tensor(full_tokens, dtype=torch.long)
+            
+            model.train()
+            model.float()
+            
+            optimizer = optim.AdamW(model.parameters(), lr=lr)
+            loss_fn = nn.CrossEntropyLoss()
+            
+            chart = st.line_chart([])
+            prog = st.progress(0)
+            
+            losses = []
+            start_t = time.time()
+            
             try:
-                text = uploaded_file.read().decode("utf-8")
-                st.caption(f"Veri Okundu: {len(text)} karakter. İşleniyor...")
-                
-                # --- DÜZELTME: Tokenizer Limit Bypass ---
-                # Hata veren kısım burasıydı. truncation=False diyerek
-                # "Ne kadar uzun olursa olsun hepsini sayıya çevir" diyoruz.
-                full_tokens = tokenizer.encode(text, truncation=False)
-                
-                st.caption(f"Token Sayısı: {len(full_tokens)} (Limit aşıldı ama devam ediliyor ✅)")
-                
-                model.train()
-                model.float() # FP32 Hassasiyeti
-                
-                data = torch.tensor(full_tokens, dtype=torch.long)
-                optimizer = optim.AdamW(model.parameters(), lr=lr_input)
-                loss_fn = nn.CrossEntropyLoss()
-                
-                chart_loss = st.line_chart([])
-                progress = st.progress(0)
-                
-                losses = []
-                batch_size = 4 # Bellek dostu olması için küçük batch
-                
-                start_time = time.time()
-                
                 for i in range(steps):
-                    # Veri setinden rastgele küçük bir parça (128 token) alıyoruz
-                    # Bu sayede 4324 tokenlık veriyi parça parça yiyoruz.
-                    ix = torch.randint(len(data) - 128, (batch_size,))
-                    x_batch = torch.stack([data[j:j+128] for j in ix]).to(device)
-                    y_batch = torch.stack([data[j+1:j+129] for j in ix]).to(device)
+                    ix = torch.randint(len(data) - 128, (batch,))
+                    x_b = torch.stack([data[j:j+128] for j in ix]).to(device)
+                    y_b = torch.stack([data[j+1:j+129] for j in ix]).to(device)
                     
-                    logits = model(x_batch)
-                    loss = loss_fn(logits.view(-1, logits.size(-1)), y_batch.view(-1))
+                    logits = model(x_b)
+                    loss = loss_fn(logits.view(-1, logits.size(-1)), y_b.view(-1))
                     
                     optimizer.zero_grad()
                     loss.backward()
@@ -208,13 +215,13 @@ with tab_train:
                     losses.append(loss.item())
                     
                     if i % 5 == 0:
-                        chart_loss.line_chart(losses)
-                        progress.progress((i+1)/steps)
+                        chart.line_chart(losses)
+                        prog.progress((i+1)/steps)
                 
-                st.success(f"✅ İnce Ayar Tamamlandı! ({time.time() - start_time:.1f}s)")
-                torch.save(model.state_dict(), "ghost_brain.pt")
-                st.toast("Beyin Güncellendi!")
+                st.balloons()
+                st.success(f"✅ Eğitim Tamamlandı! ({time.time()-start_t:.1f}s)")
+                torch.save(model.state_dict(), "trion_brain.pt")
+                st.toast("Trion Beyni Güncellendi!")
                 
             except Exception as e:
                 st.error(f"Eğitim Hatası: {e}")
-                st.write("İpucu: Metin dosyası çok mu büyük? Daha küçük bir dosyayla dene.")

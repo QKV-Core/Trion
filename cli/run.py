@@ -9,21 +9,21 @@ from colorama import init, Fore, Style
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from qkv_core.transformer import TransformerModel
+from trion_core.transformer import TransformerModel
 try:
     from tokenizer.fast_tokenizer import FastBPETokenizer as BPETokenizer
     print("✅ Using FAST tokenizer (Rust-based)")
 except ImportError:
-    from qkv_core.tokenization.bpe import BPETokenizer
+    from trion_core.tokenization.bpe import BPETokenizer
     print("⚠️  Using Python BPE tokenizer (slower)")
-from qkv_core.training.trainer import Trainer
-from qkv_core.training.dataset import TextDataset
+from trion_core.training.trainer import Trainer
+from trion_core.training.dataset import TextDataset
 try:
     from training.dataset import IncrementalDataset
 except ImportError:
     IncrementalDataset = None
-from qkv_core.inference.inference import InferenceEngine
-from qkv_core.storage.db import DatabaseManager
+from trion_core.inference.inference import InferenceEngine
+from trion_core.storage.db import DatabaseManager
 from config.model_config import ModelConfig
 
 init(autoreset=True)

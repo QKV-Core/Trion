@@ -21,8 +21,8 @@ if str(_project_root) not in sys.path:
 
 def convert_command(args):
     """Convert a model to QKV format."""
-    from qkv_core.formats.qkv_handler import QKVWriter
-    from qkv_core.formats.gguf_loader import GGUFModelLoader
+    from trion_core.formats.qkv_handler import QKVWriter
+    from trion_core.formats.gguf_loader import GGUFModelLoader
     
     input_path = Path(args.input)
     output_path = Path(args.output) if args.output else input_path.with_suffix('.qkv')
