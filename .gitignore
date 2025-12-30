@@ -1,0 +1,64 @@
+# --- Python Genel ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Sanal Ortamlar (Virtual Envs) ---
+venv/
+.env
+.venv/
+env/
+
+# --- IDE Ayarları (Gereksiz) ---
+.idea/
+.vscode/
+*.swp
+
+# --- QKV Core Projesine Özel (ÇOK ÖNEMLİ) ---
+# Büyük model ağırlıklarını asla yükleme!
+model_weights/
+*.gguf
+*.qkv
+*.bin
+*.pth
+*.pt
+
+# Log dosyaları
+logs/
+*.log
+
+# Veritabanı ve Depolama
+*.db
+*.sqlite3
+storage/
+data/
+
+# Tokenizer çıktıları
+tokenizer/
+
+# Geçici Test Dosyaları
+temp/
+/tests
+/qkv_core/runtime
+/qkv_core/config
+/qkv_core/runtime/_legacy_v1
+/qkv_core/runtime/_archive
+/qkv_core/engine

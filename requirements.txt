@@ -1,0 +1,70 @@
+torch>=2.0.0
+numpy>=1.24.0
+tqdm>=4.65.0
+tokenizers>=0.14.0         # Fast BPE tokenizer (Rust-based, 10-100x faster than Python BPE)
+sentencepiece>=0.1.99
+regex>=2023.0.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+scikit-learn>=1.3.0
+colorama>=0.4.6
+tabulate>=0.9.0
+gradio>=6.1.0
+plotly>=5.17.0
+pillow>=10.0.0
+
+# Advanced features (optional but recommended)
+einops>=0.7.0              # For Mamba SSM implementation (REQUIRED for Mamba)
+numba>=0.63.0              # JIT compiler for numerical computations (performance optimization)
+
+# Web scraping for auto-learning
+requests>=2.31.0           # HTTP requests for web scraping
+beautifulsoup4>=4.12.0     # HTML parsing
+lxml>=4.9.0                # Fast XML/HTML parser
+
+# NOTE: flash-attn requires CUDA and special build, skip on Windows
+# Install manually if needed: pip install flash-attn --no-build-isolation
+# flash-attn>=2.3.0          # FlashAttention (optional, requires CUDA build)
+
+# Hugging Face integration (for pre-trained models)
+transformers>=4.35.0       # For downloading and converting HF models
+huggingface_hub>=0.19.0    # For downloading GGUF models from Hugging Face
+accelerate>=0.24.0         # For distributed training
+# datasets>=2.14.0           # Hugging Face datasets (optional)
+
+# GGUF model support (for optimized inference)
+gguf>=0.17.0                  # GGUF file format support (reading/writing GGUF files)
+# NOTE: llama-cpp-python requires C++ compiler on Windows - install manually
+# Recommended method (Windows): Download pre-built wheel from GitHub releases
+#   Python 3.10: pip install https://github.com/abetlen/llama-cpp-python/releases/download/v0.2.90/llama_cpp_python-0.2.90-cp310-cp310-win_amd64.whl
+#   Python 3.11: pip install https://github.com/abetlen/llama-cpp-python/releases/download/v0.2.90/llama_cpp_python-0.2.90-cp311-cp311-win_amd64.whl
+#   Python 3.12: pip install https://github.com/abetlen/llama-cpp-python/releases/download/v0.2.90/llama_cpp_python-0.2.90-cp312-cp312-win_amd64.whl
+# Alternative: pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+# For CUDA: pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
+# Linux/Mac: pip install llama-cpp-python (usually works directly)
+# See GGUF_INSTALL.md for detailed installation instructions
+# llama-cpp-python>=0.2.0    # For running GGUF format models (Qwen2.5-1.5B-Instruct-GGUF)
+
+# PostgreSQL integration (optional, for production)
+psycopg2-binary>=2.9.9    # PostgreSQL adapter for Python
+python-dotenv>=1.0.0      # Environment variable management
+
+# Research Ingestion & Processing
+arxiv>=2.1.0                # arXiv API for research paper ingestion
+PyPDF2>=3.0.0               # PDF parsing for research papers
+pdfplumber>=0.10.0          # Advanced PDF parsing (alternative to PyPDF2)
+python-magic-bin>=0.4.14; sys_platform == 'win32'
+python-magic>=0.4.14; sys_platform != 'win32'
+
+# Advanced Evaluation Metrics
+nltk>=3.8.0                 # Natural Language Toolkit for BLEU, perplexity metrics
+
+# Testing Framework
+pytest>=7.4.0               # Testing framework for unit tests
+
+# Other optional features (install if needed)
+# bitsandbytes>=0.41.0       # For quantization (Linux only)
+# peft>=0.6.0               # Parameter-Efficient Fine-Tuning
+# wandb>=0.16.0             # Experiment tracking (optional)
+
