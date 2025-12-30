@@ -1,0 +1,13 @@
+services:
+  server:
+    build:
+      context: .
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]      
+    ports:
+      - 8501:8501
