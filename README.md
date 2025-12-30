@@ -66,3 +66,9 @@ graph TD
     style C fill:#222,stroke:#00bcd4,stroke-width:2px
     style F fill:#440000,stroke:#ff0000,stroke-width:2px
     style I fill:#222,stroke:#00bcd4,stroke-width:2px
+
+    ## Roadmap
+- v2.0: Trainable ternary weights (STE)
+- Activation quantization
+- KV-cache optimized inference
+- Larger-scale dataset experiments
