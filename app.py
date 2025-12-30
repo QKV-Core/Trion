@@ -6,7 +6,7 @@ import time
 import os
 import sys
 
-# --- GEREKSİNİMLER ---
+# --- REQUISITOS ---
 try:
     from transformers import GPT2Tokenizer
     from trion_core.modeling import QKVModel, QKVConfig
@@ -17,11 +17,11 @@ try:
     except ImportError:
         CUDA_AVAILABLE = False
 except ImportError as e:
-    st.error(f"Sistem Hatası: {e}")
-    st.info("Lütfen 'pip install transformers' kurduğundan emin ol.")
+    st.error(f"System error: {e}")
+    st.info("Please make sure to run 'pip install transformers'.")
     st.stop()
 
-# --- TRION ARAYÜZ AYARLARI ---
+# --- TRION CONFIGURACIÓN DE LA INTERFAZ ---
 st.set_page_config(
     page_title="TRION CORE v1.0",
     page_icon="💠",
@@ -62,15 +62,15 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # --- KAYNAK YÜKLEYİCİ ---
 @st.cache_resource
 def load_trion_system():
-    # 1. SÖZLÜK (GPT-2)
+    # 1. diccionario (GPT-2)
     try:
         tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-        tokenizer.model_max_length = 1000000 # Limit Kaldırma
+        tokenizer.model_max_length = 1000000 # Levantando el Límite
     except:
-        st.error("Tokenizer yüklenemedi. İnternet bağlantını kontrol et.")
+        st.error("Can't load tokenizer. Check Internet connection.")
         st.stop()
         
-    # 2. TRION MODELİ
+    # 2. TRION MODEL
     config = QKVConfig(
         vocab_size=50257,
         d_model=768,
@@ -81,7 +81,7 @@ def load_trion_system():
     )
     model = QKVModel(config).to(device)
     
-    status = "⚠️ ÇEKİRDEK BOŞ"
+    status = "⚠️ Empty kernel"
     
     # 3. TRION BEYNİNİ YÜKLE
     if os.path.exists("trion_brain.pt"):
@@ -90,7 +90,7 @@ def load_trion_system():
             model.load_state_dict(state_dict)
             status = "💠 TRION ONLINE"
         except Exception as e:
-            status = f"❌ UYUMSUZ VERİ: {e}"
+            status = f"❌ Incompatible data: {e}"
     
     return tokenizer, model, status
 
@@ -98,36 +98,36 @@ tokenizer, model, status_msg = load_trion_system()
 
 # --- YAN MENÜ ---
 st.sidebar.title("💠 TRION CORE")
-st.sidebar.caption(f"Sistem Durumu: {status_msg}")
+st.sidebar.caption(f"System state: {status_msg}")
 st.sidebar.markdown("---")
 
 c1, c2 = st.sidebar.columns(2)
-c1.metric("Birim", device.upper())
-c2.metric("Mimari", "1.58-BIT")
+c1.metric("Device", device.upper())
+c2.metric("Architecture", "1.58-BIT")
 
-st.sidebar.subheader("🎛️ İnce Ayar")
-curr_thresh = st.sidebar.slider("Sparsity (Seyreklik)", -1.0, 1.0, -0.1, 0.05)
+st.sidebar.subheader("🎛️ Tunning")
+curr_thresh = st.sidebar.slider("Sparsity ", -1.0, 1.0, -0.1, 0.05)
 model.config.attn_threshold = curr_thresh
 
-st.sidebar.subheader("🌊 Üretim")
-temp = st.sidebar.slider("Temperature", 0.1, 2.0, 0.4) # Varsayılan: Düşük (Stabil)
-max_len = st.sidebar.slider("Token Limiti", 50, 500, 150)
+st.sidebar.subheader("🌊 Production")
+temp = st.sidebar.slider("Temp", 0.1, 2.0, 0.4) # Predeterminado: Bajo (estable)
+max_len = st.sidebar.slider("Token Limit", 50, 500, 150)
 
-# --- ANA SEKMELER ---
-tabs = st.tabs(["💬 TRION CHAT", "🎓 TRION LAB (Eğitim)"])
+# --- PESTAÑAS PRINCIPALES ---
+tabs = st.tabs(["💬 TRION CHAT", "🎓 TRION LAB (Training)"])
 
-# ----------------- CHAT SEKMEKİ -----------------
+# ----------------- PESTAÑA DE CHAT -----------------
 with tabs[0]:
     st.subheader("Neural Interface")
     
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Trion Core sistemi hazır. Veri girişi bekleniyor."}]
+        st.session_state.messages = [{"role": "assistant", "content": "Trion Core system ready. Waiting for data entry.."}]
 
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    if prompt := st.chat_input("Komut girin..."):
+    if prompt := st.chat_input("Enter command..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -164,24 +164,24 @@ with tabs[0]:
                 st.session_state.messages.append({"role": "assistant", "content": full_res})
                 
             except Exception as e:
-                st.error(f"İşlem Hatası: {e}")
+                st.error(f"Processing error: {e}")
 
 # ----------------- EĞİTİM SEKMESİ -----------------
 with tabs[1]:
-    st.subheader("🎓 Trion Lab: Bilgi Yükleme")
-    st.info("Trion Core, matematiksel olarak dengelenmiştir. Veri yüklediğinizde çok hızlı öğrenir.")
+    st.subheader("🎓 Trion Lab: Data load")
+    st.info("Trion Core, math balanced. Fast learning on data load.")
     
-    uploaded_file = st.file_uploader("Metin Dosyası (.txt)", type=["txt"])
+    uploaded_file = st.file_uploader("Text file (.txt)", type=["txt"])
     
     c1, c2, c3 = st.columns(3)
-    steps = c1.number_input("Adım (Steps)", 10, 10000, 200)
+    steps = c1.number_input("Steps", 10, 10000, 200)
     batch = c2.number_input("Batch Size", 2, 32, 4)
-    lr = c3.number_input("Öğrenme Hızı", 1e-6, 1e-2, 5e-5, format="%.6f")
+    lr = c3.number_input("Training speed", 1e-6, 1e-2, 5e-5, format="%.6f")
     
-    if st.button("💠 EĞİTİMİ BAŞLAT", type="primary"):
+    if st.button("💠 Starting training", type="primary"):
         if uploaded_file:
             text = uploaded_file.read().decode("utf-8")
-            st.success(f"Veri Alındı: {len(text)} karakter. İşleniyor...")
+            st.success(f"Data received: {len(text)} characters. Processing...")
             
             # Tokenizer Limit Bypass
             full_tokens = tokenizer.encode(text, truncation=False)
@@ -219,9 +219,9 @@ with tabs[1]:
                         prog.progress((i+1)/steps)
                 
                 st.balloons()
-                st.success(f"✅ Eğitim Tamamlandı! ({time.time()-start_t:.1f}s)")
+                st.success(f"✅ Training finished ({time.time()-start_t:.1f}s)")
                 torch.save(model.state_dict(), "trion_brain.pt")
-                st.toast("Trion Beyni Güncellendi!")
+                st.toast("Trion have been updated.!")
                 
             except Exception as e:
-                st.error(f"Eğitim Hatası: {e}")
+                st.error(f"Error in training: {e}")
