@@ -7,49 +7,49 @@
 [![Python](https://img.shields.io/badge/python-3.9%2B-green.svg)](https://www.python.org/)
 [![Engine](https://img.shields.io/badge/engine-1.58--bit-magenta.svg)](qkv_core/)
 
-*Ultra-düşük bellek kullanımı, yüksek hız ve matematiksel zeka.*
+*Ultra-low memory footprint, high inference speed, and mathematical precision.*
 
-[Özellikler](#-özellikler) • [Kurulum](#-kurulum) • [Matematik](#-matematiksel-altyapı) • [Mimari](#-sistem-mimarisi)
+[Features](#-features) • [Installation](#-installation) • [Mathematics](#-mathematics) • [Architecture](#-architecture)
 
 </div>
 
 ---
 
-## 🚀 Proje Hakkında
-**Trion Core**, BitNet b1.58 mimarisini temel alan, yeni nesil bir Büyük Dil Modeli (LLM) çekirdeğidir. Standart modellerin aksine, ağırlıkları (weights) 16-bit FP16 yerine **1.58-bit {-1, 0, 1}** değerlerinde saklar.
+## 🚀 About the Project
+**Trion Core** is a next-generation Large Language Model (LLM) engine based on the BitNet b1.58 architecture. Unlike standard models, it stores weights in **1.58-bit {-1, 0, 1}** precision instead of 16-bit FP16.
 
-Bu devrimsel yaklaşım sayesinde:
-* **Hafıza (VRAM) kullanımı %70 azalır.**
-* **Matris çarpımları (MatMul), toplama işlemine (Addition) indirgenir.**
-* **Eğitim süresi ve enerji tüketimi radikal biçimde düşer.**
+This revolutionary approach enables:
+* **70% Reduction** in VRAM/Memory usage.
+* **Matrix Multiplications (MatMul)** are simplified into **Additions**.
+* **Significantly lower** training time and energy consumption.
 
 ---
 
-## 🧮 Matematiksel Altyapı
+## 🧮 Mathematics
 
-Trion Core, ağırlıkları sıkıştırmak için **Absmean Quantization** tekniğini kullanır.
+Trion Core utilizes **Absmean Quantization** to compress weights into ternary values.
 
-### 1. Kuantizasyon Formülü
-Ağırlık matrisi $W$ için ölçekleme faktörü $\gamma$ ve kuantize ağırlık $W_{quant}$ şöyle hesaplanır:
+### 1. Quantization Formula
+For a weight matrix $W$, the scaling factor $\gamma$ and quantized weights $W_{quant}$ are calculated as:
 
 $$\gamma = \frac{1}{nm} \sum_{ij} |W_{ij}|$$
 
 $$W_{quant} = \text{Clip}\left(\text{Round}\left(\frac{W}{\gamma}\right), -1, 1\right)$$
 
-Sonuç olarak $W_{quant}$ matrisi sadece $\\{-1, 0, +1\\}$ değerlerini içerir.
+The resulting $W_{quant}$ matrix contains only $\\{-1, 0, +1\\}$.
 
-### 2. İleri Besleme (Forward Pass)
-Aktivasyonlar $X$, 8-bit hassasiyetine ölçeklenir:
+### 2. Forward Pass
+Activations $X$ are scaled to 8-bit precision, transforming the operation into:
 
 $$Y = (W_{quant} \times X_{quant}) \times \frac{\gamma \beta}{Q_b}$$
 
-Burada işlem, ağır matris çarpımı yerine **Sparse Addition** (Seyrek Toplama) işlemine dönüşür.
+Heavy matrix multiplications are replaced by **Sparse Additions**, dramatically boosting performance on consumer hardware like the GTX 1050.
 
 ---
 
-## 🏗️ Sistem Mimarisi
+## 🏗️ Architecture
 
-Trion Core veri akış şeması (GitHub Mermaid Entegrasyonu):
+System data flow visualized (GitHub Mermaid integration):
 
 ```mermaid
 graph TD
