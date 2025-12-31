@@ -170,58 +170,138 @@ with tabs[0]:
 with tabs[1]:
     st.subheader("🎓 Trion Lab: Data load")
     st.info("Trion Core, math balanced. Fast learning on data load.")
-    
-    uploaded_file = st.file_uploader("Text file (.txt)", type=["txt"])
-    
+    # Support for multiple document formats: .txt, .pdf, .docx, .epub, .mobi
+    uploaded_file = st.file_uploader("Upload document (.txt, .pdf, .docx, .epub, .mobi)", type=["txt", "pdf", "docx", "epub", "mobi"])    
     c1, c2, c3 = st.columns(3)
     steps = c1.number_input("Steps", 10, 10000, 200)
     batch = c2.number_input("Batch Size", 2, 32, 4)
-    lr = c3.number_input("Training speed", 1e-6, 1e-2, 5e-5, format="%.6f")
-    
+    lr = c3.number_input("Training speed", 1e-6, 1e-2, 5e-5, format="%.6f")    
+    def extract_text_from_file(uploaded) -> str:
+        import io
+        name = uploaded.name.lower()
+        raw = uploaded.read()
+        # Plain text
+        if name.endswith('.txt'):
+            return raw.decode('utf-8', errors='ignore')
+
+        # DOCX
+        if name.endswith('.docx'):
+            try:
+                from docx import Document
+            except Exception as e:
+                raise RuntimeError("To read .docx install 'python-docx' (pip install python-docx)") from e
+            doc = Document(io.BytesIO(raw))
+            full = []
+            for p in doc.paragraphs:
+                if p.text:
+                    full.append(p.text)
+            return '\n'.join(full)
+
+        # PDF
+        if name.endswith('.pdf'):
+            try:
+                from PyPDF2 import PdfReader
+            except Exception as e:
+                raise RuntimeError("To read .pdf install 'PyPDF2' (pip install PyPDF2)") from e
+            reader = PdfReader(io.BytesIO(raw))
+            pages = []
+            for pg in reader.pages:
+                txt = pg.extract_text()
+                if txt:
+                    pages.append(txt)
+            return '\n'.join(pages)
+
+        # EPUB
+        if name.endswith('.epub'):
+            try:
+                from ebooklib import epub
+                from bs4 import BeautifulSoup
+            except Exception as e:
+                raise RuntimeError("To read .epub install 'ebooklib' and 'beautifulsoup4' (pip install ebooklib beautifulsoup4)") from e
+            book = epub.read_epub(io.BytesIO(raw))
+            parts = []
+            from ebooklib import ITEM_DOCUMENT
+            for item in book.get_items_of_type(ITEM_DOCUMENT):
+                try:
+                    content = item.get_content().decode('utf-8')
+                except Exception:
+                    try:
+                        content = item.get_content().decode('latin-1')
+                    except Exception:
+                        continue
+                soup = BeautifulSoup(content, 'html.parser')
+                text = soup.get_text(separator='\n')
+                if text:
+                    parts.append(text)
+            return '\n'.join(parts)
+
+        # MOBI (best-effort)
+        if name.endswith('.mobi'):
+            # Try to use 'mobi' package if available
+            try:
+                from mobi import Mobi
+            except Exception:
+                raise RuntimeError("To read .mobi install 'mobi' (pip install mobi) or convert the file to .epub/.txt")
+            buf = io.BytesIO(raw)
+            m = Mobi(buf)
+            try:
+                m.parse()
+            except Exception as e:
+                raise RuntimeError("Failed to parse .mobi file") from e
+            try:
+                html = m.get_html()  # may be bytes or str
+                if isinstance(html, bytes):
+                    html = html.decode('utf-8', errors='ignore')
+                try:
+                    from bs4 import BeautifulSoup
+                    soup = BeautifulSoup(html, 'html.parser')
+                    return soup.get_text(separator='\n')
+                except Exception:
+                    return html
+            except Exception as e:
+                raise RuntimeError("Failed to extract text from .mobi file") from e
+        raise RuntimeError('Unsupported file type')
+
     if st.button("💠 Starting training", type="primary"):
         if uploaded_file:
-            text = uploaded_file.read().decode("utf-8")
-            st.success(f"Data received: {len(text)} characters. Processing...")
-            
+            try:
+                text = extract_text_from_file(uploaded_file)
+            except Exception as e:
+                st.error(f"Error extracting text: {e}")
+                text = None
+
+            if text is None:
+                st.info("No text to train on. Upload a supported file or install the required libraries.")
+            else:
+                st.success(f"Data received: {len(text)} characters. Processing...")            
             # Tokenizer Limit Bypass
             full_tokens = tokenizer.encode(text, truncation=False)
-            data = torch.tensor(full_tokens, dtype=torch.long)
-            
+            data = torch.tensor(full_tokens, dtype=torch.long)            
             model.train()
-            model.float()
-            
+            model.float()            
             optimizer = optim.AdamW(model.parameters(), lr=lr)
-            loss_fn = nn.CrossEntropyLoss()
-            
+            loss_fn = nn.CrossEntropyLoss()            
             chart = st.line_chart([])
-            prog = st.progress(0)
-            
+            prog = st.progress(0)            
             losses = []
-            start_t = time.time()
-            
+            start_t = time.time()            
             try:
                 for i in range(steps):
                     ix = torch.randint(len(data) - 128, (batch,))
                     x_b = torch.stack([data[j:j+128] for j in ix]).to(device)
-                    y_b = torch.stack([data[j+1:j+129] for j in ix]).to(device)
-                    
+                    y_b = torch.stack([data[j+1:j+129] for j in ix]).to(device)                    
                     logits = model(x_b)
-                    loss = loss_fn(logits.view(-1, logits.size(-1)), y_b.view(-1))
-                    
+                    loss = loss_fn(logits.view(-1, logits.size(-1)), y_b.view(-1))                    
                     optimizer.zero_grad()
                     loss.backward()
-                    optimizer.step()
-                    
-                    losses.append(loss.item())
-                    
+                    optimizer.step()                    
+                    losses.append(loss.item())                    
                     if i % 5 == 0:
                         chart.line_chart(losses)
-                        prog.progress((i+1)/steps)
-                
+                        prog.progress((i+1)/steps)                
                 st.balloons()
                 st.success(f"✅ Training finished ({time.time()-start_t:.1f}s)")
                 torch.save(model.state_dict(), "trion_brain.pt")
-                st.toast("Trion have been updated.!")
-                
+                st.toast("Trion have been updated.!")                
             except Exception as e:
                 st.error(f"Error in training: {e}")
