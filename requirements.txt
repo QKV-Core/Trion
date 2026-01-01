@@ -44,8 +44,10 @@ python-dotenv>=1.0.0      # Environment variable management
 arxiv>=2.1.0                # arXiv API for research paper ingestion
 PyPDF2>=3.0.0               # PDF parsing for research papers
 pdfplumber>=0.10.0          # Advanced PDF parsing (alternative to PyPDF2)
-python-magic-bin>=0.4.14; sys_platform == 'win32'
-python-magic>=0.4.14; sys_platform != 'win32'
+python-magic>=0.4.14;
+python-docx					# for ingesting .docx files
+ebooklib					# for ingesting .epub
+mobi						# for ingesting .mobi files
 
 # Advanced Evaluation Metrics
 nltk>=3.8.0                 # Natural Language Toolkit for BLEU, perplexity metrics
