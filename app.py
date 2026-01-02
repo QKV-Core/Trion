@@ -9,7 +9,7 @@ import sys
 # --- REQUISITOS ---
 try:
     from transformers import GPT2Tokenizer
-    from trion_core.modeling import QKVModel, QKVConfig
+    from trion_core.modeling import  QKVModel, QKVConfig
     # CUDA Kontrolü
     try:
         from trion_core.engine import attention_cuda
