@@ -20,7 +20,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
+.vs/
 # --- Sanal Ortamlar (Virtual Envs) ---
 venv/
 .env

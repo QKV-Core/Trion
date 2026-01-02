@@ -1,6 +1,6 @@
 import torch
 # Doğrudan derlenmiş modülden çekiyoruz
-from . import attention_cuda
+from ...src import attention_cuda
 
 class GhostAttentionFunction(torch.autograd.Function):
     @staticmethod
