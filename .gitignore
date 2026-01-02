@@ -62,3 +62,4 @@ temp/
 /qkv_core/runtime/_legacy_v1
 /qkv_core/runtime/_archive
 /qkv_core/engine
+/.vs

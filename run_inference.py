@@ -4,6 +4,7 @@ import torch
 import sys
 import os
 import json
+import time
 
 # ------------------------------------------------------------
 # BYPASS SETUP (runtime quantization OFF)
@@ -19,7 +20,8 @@ from trion_core.modeling import GhostModel
 from trion_core.config.model_config import GhostConfig
 from trion_core.utils.sampling import (
     compute_logit_stats,
-    adaptive_sample,   # 🔥 YENİ
+    adaptive_sample,
+    GLOBAL_SAMPLING_STATS,  # 🔥 RUNTIME STATS
 )
 
 # ------------------------------------------------------------
@@ -47,6 +49,8 @@ def generate_sampled(
     with torch.no_grad():
         for step in range(max_new_tokens):
 
+            step_t0 = time.perf_counter()
+
             # ---------------------------------
             # FORWARD
             # ---------------------------------
@@ -64,6 +68,7 @@ def generate_sampled(
             # LOGIT STATS (VOCAB SIDE)
             # ---------------------------------
             stats = compute_logit_stats(next_logits[0])
+            print("LOGITS DEVICE:", next_logits.device)
 
             # ---------------------------------
             # OPTIONAL: HEAD ENTROPY (MODEL SIDE)
@@ -105,6 +110,9 @@ def generate_sampled(
 
             generated = torch.cat([generated, next_token], dim=1)
 
+            step_ms = (time.perf_counter() - step_t0) * 1000.0
+            print(f"        step_time={step_ms:.2f} ms")
+
             # ---------------------------------
             # EOS
             # ---------------------------------
@@ -138,6 +146,8 @@ def main():
         prompt = "The artificial intelligence system is designed to"
         input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(device)
 
+        GLOBAL_SAMPLING_STATS.reset()
+
         output_ids = generate_sampled(
             model,
             input_ids,
@@ -146,9 +156,22 @@ def main():
 
         text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
+        # ---------------------------------
+        # 🔥 SAMPLING SUMMARY
+        # ---------------------------------
+        summary = GLOBAL_SAMPLING_STATS.summary()
+        print("\n=== SAMPLING SUMMARY ===")
+        for k, v in summary.items():
+            print(
+                f"{k:>16} | "
+                f"ratio={v['ratio']:.2%} | "
+                f"avg_sampling={v['avg_sampling_ms']:.3f} ms"
+            )
+
         print(json.dumps({
             "status": "success",
-            "text": text.replace("\n", " ").strip()
+            "text": text.replace("\n", " ").strip(),
+            "sampling_summary": summary,
         }))
 
     except Exception as e:

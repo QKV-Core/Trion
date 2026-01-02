@@ -1,14 +1,55 @@
 import torch
 import math
+import time
 
 # ------------------------------------------------------------
-# OPTIONAL CUDA NUCLEUS EXTENSION
+# OPTIONAL CUDA NUCLEUS EXTENSION (PACKAGE-AWARE)
 # ------------------------------------------------------------
 try:
-    import trion_nucleus
+    # Correct import path for packaged .pyd
+    from trion_core.engine.nucleus import trion_nucleus
     HAS_CUDA_NUCLEUS = True
-except Exception:
+except Exception as _e:
+    trion_nucleus = None
     HAS_CUDA_NUCLEUS = False
+
+
+# ------------------------------------------------------------
+# RUNTIME SAMPLING STATS (GLOBAL, LIGHTWEIGHT)
+# ------------------------------------------------------------
+class _SamplingStats:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.count = {
+            "cuda_nucleus": 0,
+            "python_topk_topp": 0,
+        }
+        self.time_ms = {
+            "cuda_nucleus": 0.0,
+            "python_topk_topp": 0.0,
+        }
+
+    def log(self, path: str, sampling_time_ms: float):
+        if path in self.count:
+            self.count[path] += 1
+            self.time_ms[path] += sampling_time_ms
+
+    def summary(self):
+        total = self.count["cuda_nucleus"] + self.count["python_topk_topp"]
+        out = {}
+        for k in self.count:
+            c = self.count[k]
+            out[k] = {
+                "count": c,
+                "ratio": c / max(total, 1),
+                "avg_sampling_ms": self.time_ms[k] / max(c, 1),
+            }
+        return out
+
+
+GLOBAL_SAMPLING_STATS = _SamplingStats()
 
 
 # ------------------------------------------------------------
@@ -93,7 +134,7 @@ def sample_topk_topp(
     cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
 
     nucleus_mask = cumulative_probs <= top_p
-    nucleus_mask[0] = True  # always keep top-1
+    nucleus_mask[0] = True
 
     sorted_logits = torch.where(
         nucleus_mask,
@@ -125,10 +166,13 @@ def adaptive_sample(
 ):
     """
     Chooses CUDA nucleus or Python sampling based on entropy.
+    Logs runtime usage and sampling cost.
     """
 
-    Hv = stats.get("entropy", 0.0)
-    Veff = stats.get("effective_vocab", 1.0)
+    Hv = float(stats.get("entropy", 0.0))
+    Veff = float(stats.get("effective_vocab", 1.0))
+
+    t0 = time.perf_counter()
 
     # -----------------------------------------
     # CUDA NUCLEUS (HIGH ENTROPY REGIME)
@@ -141,17 +185,22 @@ def adaptive_sample(
     ):
         token = trion_nucleus.nucleus_sample(
             logits,
-            float(temperature),
+            float(max(temperature, 1e-6)),
             float(top_p),
         )
+        dt_ms = (time.perf_counter() - t0) * 1000.0
+        GLOBAL_SAMPLING_STATS.log("cuda_nucleus", dt_ms)
         return int(token.item())
 
     # -----------------------------------------
     # PYTHON FALLBACK
     # -----------------------------------------
-    return sample_topk_topp(
+    token = sample_topk_topp(
         logits,
         temperature=temperature,
         top_k=top_k,
         top_p=top_p,
     )
+    dt_ms = (time.perf_counter() - t0) * 1000.0
+    GLOBAL_SAMPLING_STATS.log("python_topk_topp", dt_ms)
+    return token
