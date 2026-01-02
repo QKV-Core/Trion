@@ -20,7 +20,6 @@ setup(
                     '-O3', 
                     '--use_fast_math', 
                     '-allow-unsupported-compiler',
-                    # FIX: STL sürüm kontrolünü devre dışı bırak
                     '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH' 
                 ]
             }

@@ -3,15 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class GhostEmbedding(nn.Module):
-    """
-    Ghost Embedding:
-    Standart 'Lookup Table' yerine, Seed-Based Deterministik Ternary Vektörler.
-    
-    Mantık:
-    - Kelimelerin vektörleri eğitilmez (Frozen).
-    - Her kelime, kendi ID'sine bağlı bir seed ile oluşturulmuş sparse bir imzadır.
-    - Token 42 -> Seed(Global + 42) -> Ternary Vector.
-    """
     def __init__(self, num_embeddings, embedding_dim, sparsity=0.5, seed=42):
         super().__init__()
         self.num_embeddings = num_embeddings
