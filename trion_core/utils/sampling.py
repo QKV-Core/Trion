@@ -1,6 +1,5 @@
 import torch
 import math
-<<<<<<< HEAD
 import time
 
 # ------------------------------------------------------------
@@ -12,21 +11,10 @@ try:
     HAS_CUDA_NUCLEUS = True
 except Exception as _e:
     trion_nucleus = None
-=======
-
-# ------------------------------------------------------------
-# OPTIONAL CUDA NUCLEUS EXTENSION
-# ------------------------------------------------------------
-try:
-    import trion_nucleus
-    HAS_CUDA_NUCLEUS = True
-except Exception:
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
     HAS_CUDA_NUCLEUS = False
 
 
 # ------------------------------------------------------------
-<<<<<<< HEAD
 # RUNTIME SAMPLING STATS (GLOBAL, LIGHTWEIGHT)
 # ------------------------------------------------------------
 class _SamplingStats:
@@ -65,8 +53,6 @@ GLOBAL_SAMPLING_STATS = _SamplingStats()
 
 
 # ------------------------------------------------------------
-=======
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
 # LOGIT STATISTICS
 # ------------------------------------------------------------
 @torch.no_grad()
@@ -148,11 +134,7 @@ def sample_topk_topp(
     cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
 
     nucleus_mask = cumulative_probs <= top_p
-<<<<<<< HEAD
     nucleus_mask[0] = True
-=======
-    nucleus_mask[0] = True  # always keep top-1
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
 
     sorted_logits = torch.where(
         nucleus_mask,
@@ -184,7 +166,6 @@ def adaptive_sample(
 ):
     """
     Chooses CUDA nucleus or Python sampling based on entropy.
-<<<<<<< HEAD
     Logs runtime usage and sampling cost.
     """
 
@@ -192,12 +173,6 @@ def adaptive_sample(
     Veff = float(stats.get("effective_vocab", 1.0))
 
     t0 = time.perf_counter()
-=======
-    """
-
-    Hv = stats.get("entropy", 0.0)
-    Veff = stats.get("effective_vocab", 1.0)
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
 
     # -----------------------------------------
     # CUDA NUCLEUS (HIGH ENTROPY REGIME)
@@ -210,35 +185,22 @@ def adaptive_sample(
     ):
         token = trion_nucleus.nucleus_sample(
             logits,
-<<<<<<< HEAD
             float(max(temperature, 1e-6)),
             float(top_p),
         )
         dt_ms = (time.perf_counter() - t0) * 1000.0
         GLOBAL_SAMPLING_STATS.log("cuda_nucleus", dt_ms)
-=======
-            float(temperature),
-            float(top_p),
-        )
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
         return int(token.item())
 
     # -----------------------------------------
     # PYTHON FALLBACK
     # -----------------------------------------
-<<<<<<< HEAD
     token = sample_topk_topp(
-=======
-    return sample_topk_topp(
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
         logits,
         temperature=temperature,
         top_k=top_k,
         top_p=top_p,
     )
-<<<<<<< HEAD
     dt_ms = (time.perf_counter() - t0) * 1000.0
     GLOBAL_SAMPLING_STATS.log("python_topk_topp", dt_ms)
     return token
-=======
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3

@@ -4,10 +4,7 @@ import torch
 import sys
 import os
 import json
-<<<<<<< HEAD
 import time
-=======
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
 
 # ------------------------------------------------------------
 # BYPASS SETUP (runtime quantization OFF)
@@ -23,12 +20,8 @@ from trion_core.modeling import GhostModel
 from trion_core.config.model_config import GhostConfig
 from trion_core.utils.sampling import (
     compute_logit_stats,
-<<<<<<< HEAD
     adaptive_sample,
     GLOBAL_SAMPLING_STATS,  # 🔥 RUNTIME STATS
-=======
-    adaptive_sample,   # 🔥 YENİ
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
 )
 
 # ------------------------------------------------------------
@@ -56,11 +49,8 @@ def generate_sampled(
     with torch.no_grad():
         for step in range(max_new_tokens):
 
-<<<<<<< HEAD
             step_t0 = time.perf_counter()
 
-=======
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
             # ---------------------------------
             # FORWARD
             # ---------------------------------
@@ -78,10 +68,7 @@ def generate_sampled(
             # LOGIT STATS (VOCAB SIDE)
             # ---------------------------------
             stats = compute_logit_stats(next_logits[0])
-<<<<<<< HEAD
             print("LOGITS DEVICE:", next_logits.device)
-=======
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
 
             # ---------------------------------
             # OPTIONAL: HEAD ENTROPY (MODEL SIDE)
@@ -123,12 +110,9 @@ def generate_sampled(
 
             generated = torch.cat([generated, next_token], dim=1)
 
-<<<<<<< HEAD
             step_ms = (time.perf_counter() - step_t0) * 1000.0
             print(f"        step_time={step_ms:.2f} ms")
 
-=======
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
             # ---------------------------------
             # EOS
             # ---------------------------------
@@ -162,11 +146,8 @@ def main():
         prompt = "The artificial intelligence system is designed to"
         input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(device)
 
-<<<<<<< HEAD
         GLOBAL_SAMPLING_STATS.reset()
 
-=======
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
         output_ids = generate_sampled(
             model,
             input_ids,
@@ -175,7 +156,6 @@ def main():
 
         text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
-<<<<<<< HEAD
         # ---------------------------------
         # 🔥 SAMPLING SUMMARY
         # ---------------------------------
@@ -192,11 +172,6 @@ def main():
             "status": "success",
             "text": text.replace("\n", " ").strip(),
             "sampling_summary": summary,
-=======
-        print(json.dumps({
-            "status": "success",
-            "text": text.replace("\n", " ").strip()
->>>>>>> 2add3cbd1d8e1ff6fca6c94f93ad76b2f72239d3
         }))
 
     except Exception as e:
